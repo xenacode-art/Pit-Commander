@@ -1,6 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
-import { RaceResult, TelemetryPoint, CarState, StrategyRecommendation } from '../types';
+import { RaceResult, TelemetryPoint, CarState, StrategyRecommendation, RaceState } from '../types';
 import { marked } from "marked";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
@@ -80,37 +79,29 @@ export async function generateStrategyRecommendation(carState: CarState): Promis
         - The ideal pit window is typically between laps 9 and 14.
         - Low fuel (under 15%) is critical.
 
-        Based on this, provide your recommendation in the following JSON format.
+        Based on this, provide your recommendation in a raw JSON format, without any markdown fences like \`\`\`json.
+        The JSON object must have these exact keys: "recommendation", "confidence", "reasoning", "color".
         - recommendation: Choose one of 'PIT_NOW', 'PIT_IN_2_LAPS', 'STAY_OUT', 'PUSH', 'CONSERVE_TIRES'.
         - confidence: A number between 0 and 100.
         - reasoning: A short, clear explanation.
         - color: 'red' for urgent actions (PIT_NOW), 'yellow' for warnings/upcoming actions, 'green' for safe states.
     `;
     
-    const schema = {
-        type: Type.OBJECT,
-        properties: {
-            recommendation: { type: Type.STRING },
-            confidence: { type: Type.NUMBER },
-            reasoning: { type: Type.STRING },
-            color: { type: Type.STRING }
-        },
-        required: ['recommendation', 'confidence', 'reasoning', 'color']
-    };
-
-     const response = await ai.models.generateContent({
+    // By removing the responseSchema and making the call a simple text-in, text-out request,
+    // we increase robustness and avoid potential issues with more complex API features that may have caused the RPC error.
+    const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: prompt,
-        config: { 
-            responseMimeType: "application/json",
-            responseSchema: schema
-        }
     });
 
-    // FIX: Clean up potential markdown and parse the JSON response safely.
     const cleanedText = response.text.replace(/^```json\s*|```\s*$/g, '');
-    const parsed = JSON.parse(cleanedText);
-    return parsed as StrategyRecommendation;
+    try {
+        const parsed = JSON.parse(cleanedText);
+        return parsed as StrategyRecommendation;
+    } catch(e) {
+        console.error("Failed to parse JSON from Gemini response:", cleanedText, e);
+        throw new Error("Received an invalid JSON response from the AI.");
+    }
 }
 
 export async function runWhatIfSimulation(scenario: {carNumber: string, decisionLap: number, action: string, originalFinish: number, telemetry: TelemetryPoint[] }): Promise<string> {
@@ -140,36 +131,75 @@ export async function runWhatIfSimulation(scenario: {carNumber: string, decision
 }
 
 
-export async function generateDriverAnalysis(driverData: {carNumber: string, telemetry: TelemetryPoint[]}): Promise<string> {
-    const { carNumber, telemetry } = driverData;
-    const driverLaps = telemetry.filter(t => t.carNumber === carNumber).map(t => ({
-        lap: t.lap,
-        lapTime: t.lapTime.toFixed(3),
-        s1: t.sector1.toFixed(3),
-        s2: t.sector2.toFixed(3),
-        s3: t.sector3.toFixed(3),
-        pos: t.position,
-    }));
+export async function generateDriverAnalysis(driverData: { carNumbers: string[], telemetry: TelemetryPoint[] }): Promise<string> {
+    const { carNumbers, telemetry } = driverData;
 
-    if (driverLaps.length === 0) {
-        return "<p>No data available for this driver.</p>";
+    if (carNumbers.length === 0) {
+        return "<p>No driver selected for analysis.</p>";
     }
 
-    const bestLap = driverLaps.reduce((best, current) => parseFloat(current.lapTime) < parseFloat(best.lapTime) ? current : best);
+    const analysisData = carNumbers.map(cn => {
+        const driverLaps = telemetry.filter(t => t.carNumber === cn).map(t => ({
+            lap: t.lap,
+            lapTime: t.lapTime,
+            pos: t.position,
+        }));
+        if (driverLaps.length === 0) return { carNumber: cn, bestLap: null, lapData: [] };
+        const bestLap = driverLaps.reduce((best, current) => current.lapTime < best.lapTime ? current : best);
+        return { carNumber: cn, bestLap: { lap: bestLap.lap, time: bestLap.lapTime.toFixed(3) }, lapData: driverLaps.slice(0, 15).map(l => ({lap: l.lap, lapTime: l.lapTime.toFixed(3)})) };
+    });
+
+    const isComparison = carNumbers.length > 1;
 
     const prompt = `
         You are "Pit Commander," a world-class driver coach.
-        Analyze the performance of driver #${carNumber} at Indianapolis based on their lap data.
+        Analyze the performance of ${isComparison ? 'these drivers' : `driver #${carNumbers[0]}`} at Indianapolis based on their lap data.
 
-        Key Data Points:
-        - Best Lap: Lap ${bestLap.lap} with a time of ${bestLap.lapTime}s.
-        - Lap by Lap Data (first 15 laps): ${JSON.stringify(driverLaps.slice(0, 15), null, 2)}
+        Key Data:
+        ${JSON.stringify(analysisData, null, 2)}
         
-        Provide a concise performance analysis in Markdown format. Focus on:
-        1.  **Overall Consistency:** Are the lap times consistent or erratic?
-        2.  **Sector Performance:** Is there a specific sector where the driver is consistently strong or weak?
-        3.  **Actionable Feedback:** Provide one or two concrete improvement recommendations. For example, "Focus on consistency in Sector 2, where times vary significantly." or "The pace in the final laps suggests good tire management."
+        Provide a concise performance analysis in Markdown format.
+        
+        ${isComparison 
+            ? `**This is a comparative analysis.** Focus on:
+                1.  **Head-to-Head Pace:** Who had the better overall pace and best lap?
+                2.  **Consistency Comparison:** Who was more consistent? Identify where one driver had a clear advantage.
+                3.  **Key Differentiator:** What is the single biggest difference in their performance based on this data?
+                4.  **Coaching Summary:** Give a brief summary for each driver.`
+            : `**This is a single driver analysis.** Focus on:
+                1.  **Overall Consistency:** Are the lap times consistent or erratic?
+                2.  **Pace Analysis:** How does their best lap compare to their average pace?
+                3.  **Actionable Feedback:** Provide one or two concrete improvement recommendations. For example, "Focus on consistency in the middle of the race, where times vary significantly."`
+        }
     `;
 
+    return callGemini(prompt);
+}
+
+
+export async function askAIRaceEngineer(question: string, raceState: RaceState, lap: number): Promise<string> {
+    const simplifiedState = Object.values(raceState).map(car => ({
+        P: car.position,
+        '#': car.carNumber,
+        Driver: car.driverShortName,
+        Lap: car.lap,
+        TireAge: car.tireAge,
+        Fuel: `${car.fuel.toFixed(1)}%`,
+        GapToP1: car.gapToLeader.toFixed(2) + 's',
+    })).sort((a,b) => a.P - b.P);
+
+    const prompt = `
+        You are "Pit Commander," a world-class race strategist, providing real-time answers.
+        It is currently Lap ${lap} of a 23-lap race at Indianapolis.
+        A user has a question. Answer it concisely and accurately based ONLY on the data provided below.
+        If the data doesn't answer the question, say so.
+
+        User's Question: "${question}"
+
+        Current Race Telemetry Data:
+        ${JSON.stringify(simplifiedState, null, 2)}
+        
+        Provide your answer in Markdown format.
+    `;
     return callGemini(prompt);
 }

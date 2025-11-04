@@ -2,8 +2,8 @@ import React, { useState, useMemo } from 'react';
 import { RaceResult } from '../types';
 import { generateHistoryAnalysis } from '../services/geminiService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from 'recharts';
+import { useRaceContext } from './dashboard/index';
 
-// --- Re-scoped components from original app ---
 
 const RaceResultsTable: React.FC<{ data: RaceResult[] }> = ({ data }) => (
     <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -107,11 +107,8 @@ const FastestLapChart: React.FC<{ data: RaceResult[] }> = ({ data }) => {
 
 // --- Main History Component ---
 
-interface HistoryProps {
-    historicalData: RaceResult[];
-}
-
-const History: React.FC<HistoryProps> = ({ historicalData }) => {
+const History: React.FC = () => {
+    const { historicalData } = useRaceContext();
     return (
         <div className="font-mono space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

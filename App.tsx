@@ -5,6 +5,9 @@ import Dashboard from './components/Dashboard';
 import Simulator from './components/Simulator';
 import Analysis from './components/Analysis';
 import { useRaceData, useTelemetryData } from './hooks/useRaceData';
+import { useRaceSimulation } from './hooks/useRaceSimulation';
+import { RaceContext, IRaceContext } from './components/dashboard/index';
+
 
 type Tab = 'live' | 'history' | 'simulator' | 'analysis';
 
@@ -12,17 +15,24 @@ const App: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('live');
     const historicalData = useRaceData();
     const telemetryData = useTelemetryData();
+    const simulation = useRaceSimulation(telemetryData);
+
+    const contextValue: IRaceContext = {
+        historicalData,
+        telemetryData,
+        ...simulation
+    };
 
     const renderContent = () => {
         switch (activeTab) {
             case 'history':
-                return <History historicalData={historicalData} />;
+                return <History />;
             case 'live':
-                return <Dashboard telemetryData={telemetryData} />;
+                return <Dashboard />;
             case 'simulator':
-                return <Simulator telemetryData={telemetryData} />;
+                return <Simulator />;
             case 'analysis':
-                return <Analysis telemetryData={telemetryData} />;
+                return <Analysis />;
             default:
                 return null;
         }
@@ -42,22 +52,24 @@ const App: React.FC = () => {
     );
 
     return (
-        <div className="bg-gray-900 text-white min-h-screen font-sans">
-            <div className="container mx-auto p-4 lg:p-6 print-container">
-                <div className="no-print">
-                    <Header />
+        <RaceContext.Provider value={contextValue}>
+            <div className="bg-gray-900 text-white min-h-screen font-sans">
+                <div className="container mx-auto p-4 lg:p-6 print-container">
+                    <div className="no-print">
+                        <Header />
+                    </div>
+                    <main className="mt-6">
+                        <nav className="flex border-b border-gray-700 mb-6 no-print">
+                            <TabButton tab="live" label="Live Race Dashboard" />
+                            <TabButton tab="history" label="Race History" />
+                            <TabButton tab="simulator" label="What-If Simulator" />
+                            <TabButton tab="analysis" label="Driver Analysis" />
+                        </nav>
+                        {renderContent()}
+                    </main>
                 </div>
-                <main className="mt-6">
-                    <nav className="flex border-b border-gray-700 mb-6 no-print">
-                        <TabButton tab="live" label="Live Race Dashboard" />
-                        <TabButton tab="history" label="Race History" />
-                        <TabButton tab="simulator" label="What-If Simulator" />
-                        <TabButton tab="analysis" label="Driver Analysis" />
-                    </nav>
-                    {renderContent()}
-                </main>
             </div>
-        </div>
+        </RaceContext.Provider>
     );
 };
 

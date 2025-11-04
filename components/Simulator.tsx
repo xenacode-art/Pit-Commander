@@ -1,12 +1,7 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { TelemetryPoint } from '../types';
 import { runWhatIfSimulation } from '../services/geminiService';
-import { useRaceData } from '../hooks/useRaceData';
-
-interface SimulatorProps {
-    telemetryData: TelemetryPoint[];
-}
+import { useRaceContext } from './dashboard/index';
 
 const LoadingSpinner: React.FC = () => (
     <div className="flex items-center justify-center space-x-2">
@@ -19,9 +14,8 @@ const LoadingSpinner: React.FC = () => (
 );
 
 
-const Simulator: React.FC<SimulatorProps> = ({ telemetryData }) => {
-    const historicalData = useRaceData();
-    const maxLaps = useMemo(() => Math.max(...telemetryData.map(t => t.lap)), [telemetryData]);
+const Simulator: React.FC = () => {
+    const { historicalData, telemetryData, maxLaps } = useRaceContext();
     
     const [selectedLap, setSelectedLap] = useState(10);
     const [selectedCar, setSelectedCar] = useState(historicalData[0].number);
