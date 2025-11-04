@@ -142,7 +142,7 @@ pit-commander/
 
 ## 🤝 Team
 
-- **xenacode-art** -  ML engineering, Automation enginerring
+- **xenacode-art** -  ML engineering, Automation engineering
 - **Dataset**: Toyota GR Cup - Indianapolis Motor Speedway
 
 ## 📄 License
@@ -161,6 +161,6 @@ For questions about this project:
 - **Email**: coolxena1@gmail.com
 - **LinkedIn**:(https://www.linkedin.com/in/erik-obinna-6a937720a)
 
----
+
 
 Built with ❤️ for [Hack the Track 2025](https://trddev.com/hackathon-2025) presented by Toyota GR
