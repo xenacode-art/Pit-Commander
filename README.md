@@ -154,6 +154,6 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 For questions about this project:
 - **Email**: coolxena1@gmail.com
-- **LinkedIn**:(https://www.linkedin.com/in/erik-obinna-6a937720a)
+- **LinkedIn**: https://www.linkedin.com/in/erik-obinna-6a937720a
 
 Built with ❤️ for [Hack the Track 2025](https://trddev.com/hackathon-2025) presented by Toyota GR
