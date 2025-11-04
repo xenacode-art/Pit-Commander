@@ -19,7 +19,9 @@ async function callGemini(prompt: string, modelName: string = 'gemini-2.5-flash'
             const cleanedText = text.replace(/^```json\s*|```\s*$/g, '');
             return JSON.parse(cleanedText);
         }
-        return await marked.parse(text);
+        // FIX: Ensure marked.parse returns a string.
+        const parsedHtml = await marked.parse(text);
+        return parsedHtml;
 
     } catch (error) {
         console.error("Error calling Gemini API:", error);
@@ -92,7 +94,8 @@ export async function generateStrategyRecommendation(carState: CarState): Promis
             confidence: { type: Type.NUMBER },
             reasoning: { type: Type.STRING },
             color: { type: Type.STRING }
-        }
+        },
+        required: ['recommendation', 'confidence', 'reasoning', 'color']
     };
 
      const response = await ai.models.generateContent({
@@ -104,7 +107,9 @@ export async function generateStrategyRecommendation(carState: CarState): Promis
         }
     });
 
-    const parsed = JSON.parse(response.text);
+    // FIX: Clean up potential markdown and parse the JSON response safely.
+    const cleanedText = response.text.replace(/^```json\s*|```\s*$/g, '');
+    const parsed = JSON.parse(cleanedText);
     return parsed as StrategyRecommendation;
 }
 
