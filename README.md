@@ -1,7 +1,8 @@
 # 🏎️ Pit Commander - AI Race Engineer Assistant
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Live Demo](https://img.shields.io/badge/demo-live-green)](https://pitcommander.vercel.app)
+[![Live Demo]<img width="1870" height="971" alt="image_2025-11-04_162317598" src="https://github.com/user-attachments/assets/afcf31e2-35df-4cbd-a427-c95c9d7884e6" />
+
 
 ## 🏁 Overview
 
