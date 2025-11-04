@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { RaceResult } from '../types';
 import { generateHistoryAnalysis } from '../services/geminiService';
@@ -47,12 +46,17 @@ const AIPanel: React.FC<{ raceData: RaceResult[] }> = ({ raceData }) => {
   };
 
   return (
-    <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-      <h2 className="text-xl font-bold text-race-red mb-4">AI Race Debrief</h2>
+    <div className="bg-gray-800 p-4 rounded-lg shadow-lg print-card">
+      <h2 className="text-xl font-bold text-race-red mb-4 print-text-header">AI Race Debrief</h2>
       <div className="flex flex-col space-y-4">
-        <button onClick={handleGenerateAnalysis} disabled={isLoading} className="bg-race-red hover:bg-red-700 disabled:bg-red-900/50 text-white font-bold py-2 px-4 rounded transition-colors">
-          {isLoading ? 'Analyzing...' : 'Generate Post-Race Summary'}
-        </button>
+        <div className="flex space-x-2 no-print">
+            <button onClick={handleGenerateAnalysis} disabled={isLoading} className="flex-1 bg-race-red hover:bg-red-700 disabled:bg-red-900/50 text-white font-bold py-2 px-4 rounded transition-colors">
+              {isLoading ? 'Analyzing...' : 'Generate Summary'}
+            </button>
+            <button onClick={() => window.print()} title="Export as PDF" className="bg-gray-600 hover:bg-gray-500 text-white font-bold p-2 rounded transition-colors">
+                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+            </button>
+        </div>
         {isLoading && <div className="text-center p-4">Loading Analysis...</div>}
         {analysis && <div className="prose prose-invert max-w-none mt-4" dangerouslySetInnerHTML={{ __html: analysis }} />}
       </div>
@@ -64,6 +68,7 @@ const FastestLapChart: React.FC<{ data: RaceResult[] }> = ({ data }) => {
     const chartData = useMemo(() => {
         const topTen = data.slice(0, 10);
         const leaderTimeStr = topTen[0]?.fastestLapTime;
+        if (!leaderTimeStr) return [];
         const [min, sec] = leaderTimeStr.split(':').map(parseFloat);
         const leaderTimeSec = min * 60 + sec;
 
@@ -110,14 +115,14 @@ const History: React.FC<HistoryProps> = ({ historicalData }) => {
     return (
         <div className="font-mono space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                <div className="lg:col-span-3 bg-gray-800 p-4 rounded-lg shadow-lg">
-                    <h2 className="text-xl font-bold text-race-red mb-4">Final Race Results</h2>
+                <div className="lg:col-span-3 bg-gray-800 p-4 rounded-lg shadow-lg print-card">
+                    <h2 className="text-xl font-bold text-race-red mb-4 print-text-header">Final Race Results</h2>
                     <RaceResultsTable data={historicalData} />
                 </div>
                 <div className="lg:col-span-2 space-y-6">
                     <AIPanel raceData={historicalData} />
-                    <div className="bg-gray-800 p-4 rounded-lg shadow-lg">
-                        <h2 className="text-xl font-bold text-race-red mb-4">Fastest Lap Comparison (Top 10)</h2>
+                    <div className="bg-gray-800 p-4 rounded-lg shadow-lg print-card">
+                        <h2 className="text-xl font-bold text-race-red mb-4 print-text-header">Fastest Lap Comparison (Top 10)</h2>
                         <FastestLapChart data={historicalData} />
                     </div>
                 </div>

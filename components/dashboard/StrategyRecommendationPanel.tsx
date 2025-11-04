@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CarState, StrategyRecommendation } from '../../types';
 import { generateStrategyRecommendation } from '../../services/geminiService';
 
@@ -21,7 +21,22 @@ const StrategyRecommendationPanel: React.FC<StrategyRecommendationPanelProps> = 
     const [recommendation, setRecommendation] = useState<StrategyRecommendation | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const prevRecommendationRef = useRef<string | null>(null);
     
+    // --- Voice Alert Logic ---
+    useEffect(() => {
+        if (recommendation && recommendation.recommendation !== prevRecommendationRef.current) {
+            if (recommendation.recommendation === 'PIT_NOW') {
+                const utterance = new SpeechSynthesisUtterance("Box, box, box! Pit now!");
+                utterance.rate = 1.1;
+                utterance.pitch = 1.2;
+                window.speechSynthesis.speak(utterance);
+            }
+            prevRecommendationRef.current = recommendation.recommendation;
+        }
+    }, [recommendation]);
+    // -------------------------
+
     useEffect(() => {
         const getRecommendation = async () => {
             if (!carState) return;

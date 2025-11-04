@@ -43,10 +43,12 @@ const App: React.FC = () => {
 
     return (
         <div className="bg-gray-900 text-white min-h-screen font-sans">
-            <div className="container mx-auto p-4 lg:p-6">
-                <Header />
+            <div className="container mx-auto p-4 lg:p-6 print-container">
+                <div className="no-print">
+                    <Header />
+                </div>
                 <main className="mt-6">
-                    <nav className="flex border-b border-gray-700 mb-6">
+                    <nav className="flex border-b border-gray-700 mb-6 no-print">
                         <TabButton tab="live" label="Live Race Dashboard" />
                         <TabButton tab="history" label="Race History" />
                         <TabButton tab="simulator" label="What-If Simulator" />

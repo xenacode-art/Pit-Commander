@@ -1,5 +1,6 @@
 import React from 'react';
-import { RaceState } from '../../types';
+// FIX: Import CarState to correctly type the race state values.
+import { RaceState, CarState } from '../../types';
 
 interface TrackMapProps {
     raceState: RaceState;
@@ -31,7 +32,8 @@ const getCarPositionOnTrack = (lapDistance: number) => {
 
 
 const TrackMap: React.FC<TrackMapProps> = ({ raceState, selectedCarNumber }) => {
-    const cars = Object.values(raceState).sort((a,b) => b.position - a.position); // Render leader on top
+    // FIX: Explicitly cast Object.values to CarState[] to resolve type errors.
+    const cars = (Object.values(raceState) as CarState[]).sort((a,b) => b.position - a.position); // Render leader on top
 
     // Mock lap distance based on position to spread cars out, since we don't have real-time lapDistance.
     const getLapDistance = (position: number, gapToLeader: number) => {

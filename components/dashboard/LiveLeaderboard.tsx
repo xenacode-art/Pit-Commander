@@ -1,5 +1,6 @@
 import React from 'react';
-import { RaceState } from '../../types';
+// FIX: Import CarState to correctly type the race state values.
+import { RaceState, CarState } from '../../types';
 
 interface LiveLeaderboardProps {
     raceState: RaceState;
@@ -8,7 +9,8 @@ interface LiveLeaderboardProps {
 }
 
 const LiveLeaderboard: React.FC<LiveLeaderboardProps> = ({ raceState, onSelectCar, selectedCarNumber }) => {
-    const sortedCars = Object.values(raceState).sort((a, b) => a.position - b.position);
+    // FIX: Explicitly cast Object.values to CarState[] to resolve type errors.
+    const sortedCars = (Object.values(raceState) as CarState[]).sort((a, b) => a.position - b.position);
 
     return (
         <div className="bg-gray-800 p-4 rounded-lg shadow-lg">

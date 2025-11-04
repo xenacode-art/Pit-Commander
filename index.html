@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -44,6 +43,42 @@
         }
         .prose ul > li::before {
             background-color: #ef4444;
+        }
+
+        /* Print-specific styles for PDF export */
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-container {
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .print-card {
+                background-color: #f3f4f6 !important; /* gray-100 */
+                box-shadow: none !important;
+                border: 1px solid #d1d5db; /* gray-300 */
+                color: black !important;
+            }
+            .print-text-header {
+                color: #dc2626 !important; /* red-600 */
+            }
+            .prose, .prose h1, .prose h2, .prose h3, .prose strong {
+                color: black !important;
+            }
+            .recharts-wrapper, .recharts-surface {
+                color: black !important;
+            }
+             .recharts-text, .recharts-label, .recharts-cartesian-axis-tick-value text {
+                fill: black !important;
+            }
+            .recharts-bar-rectangle path {
+                fill: #dc2626 !important;
+            }
         }
 
     </style>
